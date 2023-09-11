@@ -103,6 +103,10 @@ jobs:
           name: wheels
       - name: Publish to PyPI
         uses: PyO3/maturin-action@v1
+        env:
+          MATURIN_REPOSITORY_URL: https://upload.pypi.org/legacy/
+          MATURIN_USERNAME: __token__
+          MATURIN_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         with:
           command: upload
-          args: --non-interactive --skip-existing * --repository-url https://upload.pypi.org/legacy/ --username __token__ --password ${{ secrets.PYPI_TOKEN }}
+          args: --non-interactive --skip-existing *
