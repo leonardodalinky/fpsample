@@ -1,4 +1,4 @@
-name: CI
+name: test-upload
 
 on:
   push:
@@ -10,10 +10,10 @@ permissions:
 
 jobs:
   linux:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        target: [x86_64, x86, aarch64, armv7, s390x, ppc64le]
+        target: [x86_64, x86]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
@@ -23,7 +23,6 @@ jobs:
             '3.8'
             '3.9'
             '3.10'
-            '3.11'
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -38,7 +37,7 @@ jobs:
           path: dist
 
   windows:
-    runs-on: windows-latest
+    runs-on: windows-2019
     strategy:
       matrix:
         target: [x64, x86]
@@ -51,7 +50,6 @@ jobs:
             '3.8'
             '3.9'
             '3.10'
-            '3.11'
           architecture: ${{ matrix.target }}
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -66,7 +64,7 @@ jobs:
           path: dist
 
   macos:
-    runs-on: macos-latest
+    runs-on: macos-11
     strategy:
       matrix:
         target: [x86_64, aarch64]
@@ -79,7 +77,6 @@ jobs:
             '3.8'
             '3.9'
             '3.10'
-            '3.11'
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
