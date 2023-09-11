@@ -16,9 +16,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: |
-            '3.8.10'
-            '3.9.12'
-            '3.10.11'
+            3.7.9
+            3.8.10
+            3.9.12
+            3.10.11
           architecture: x64
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -40,9 +41,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: |
-            '3.8.10'
-            '3.9.12'
-            '3.10.11'
+            3.7.9
+            3.8.10
+            3.9.12
+            3.10.11
           architecture: x64
       - name: Build wheels
         uses: PyO3/maturin-action@v1
@@ -63,9 +65,10 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: |
-            '3.8.10'
-            '3.9.12'
-            '3.10.11'
+            3.7.9
+            3.8.10
+            3.9.12
+            3.10.11
           architecture: x64
       - name: Build wheels
         uses: PyO3/maturin-action@v1
