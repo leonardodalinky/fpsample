@@ -11,19 +11,16 @@ permissions:
 jobs:
   linux:
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        py_arch: [x86, x64]
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: |
-            '3.7'
-            '3.8'
-            '3.9'
-            '3.10'
-          architecture: ${{ matrix.py_arch }}
+            '3.7.9'
+            '3.8.10'
+            '3.9.12'
+            '3.10.11'
+          architecture: x64
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -38,20 +35,17 @@ jobs:
           path: dist
 
   windows:
-    runs-on: windows-2019
-    strategy:
-      matrix:
-        py_arch: [x86, x64]
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: |
-            '3.7'
-            '3.8'
-            '3.9'
-            '3.10'
-          architecture: ${{ matrix.py_arch }}
+            '3.7.9'
+            '3.8.10'
+            '3.9.12'
+            '3.10.11'
+          architecture: x64
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
@@ -65,16 +59,17 @@ jobs:
           path: dist
 
   macos:
-    runs-on: macos-11
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-python@v4
         with:
           python-version: |
-            '3.7'
-            '3.8'
-            '3.9'
-            '3.10'
+            '3.7.9'
+            '3.8.10'
+            '3.9.12'
+            '3.10.11'
+          architecture: x64
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         with:
