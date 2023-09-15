@@ -5,6 +5,8 @@ use numpy::{
 };
 use pyo3::prelude::*;
 
+mod kdtree_fps;
+
 fn check_py_input(
     points: &PyReadonlyArray2<f32>,
     n_samples: usize,
