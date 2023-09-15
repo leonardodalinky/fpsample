@@ -12,3 +12,4 @@ crate-type = ["cdylib"]
 [dependencies]
 pyo3 = { version = "0.19", features = ["extension-module"] }
 numpy = "0.19"
+kdtree = "0.7"

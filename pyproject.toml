@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "fpsample"
-version = "0.1.0"
+version = "0.2.0"
 authors = [{ name = "Leonard Lin", email = "leonard.keilin@gmail.com" }]
 keyword = [
     "sampling",
@@ -12,7 +12,7 @@ keyword = [
     "furthest point sampling",
     "point cloud",
 ]
-description = "A efficient CPU implementation of farthest point sampling (FPS) for point clouds."
+description = "An efficient CPU implementation of farthest point sampling (FPS) for point clouds."
 readme = "README.md"
 license = { file = "LICENSE" }
 requires-python = ">=3.7"
@@ -24,8 +24,8 @@ classifiers = [
 dependencies = ["numpy>=1.16.0"]
 
 [project.urls]
-Homepage = "https://github.com/leonardodalinky/fpsample"
 Repository = "https://github.com/leonardodalinky/fpsample"
+Tracker = "https://github.com/leonardodalinky/fpsample/issues"
 
 [tool.maturin]
 python-source = "python"

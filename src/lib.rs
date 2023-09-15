@@ -1,3 +1,5 @@
+use kdtree::distance::squared_euclidean;
+use kdtree::KdTree;
 use numpy::{
     ndarray::s,
     ndarray::{Array1, ArrayView2, Axis, Zip},
@@ -174,10 +176,92 @@ fn fps_npdu_sampling_py<'py>(
     Ok(ret)
 }
 
+fn fps_npdu_kdtree_sampling(
+    points: ArrayView2<f32>,
+    n_samples: usize,
+    k: usize,
+    start_idx: usize,
+) -> Array1<usize> {
+    let [p, c] = points.shape() else {
+        panic!("points must be a 2D array")
+    };
+    // contruct kd-tree
+    let std_points = points.as_standard_layout();
+    let mut kdtree: KdTree<f32, usize, _> = KdTree::new(*c);
+    let std_points_vec = std_points.outer_iter().collect::<Vec<_>>();
+    let std_points_slice_vec = std_points_vec
+        .iter()
+        .map(|x| x.as_slice().unwrap())
+        .collect::<Vec<_>>();
+    for (i, point) in std_points_slice_vec.iter().enumerate() {
+        kdtree.add(*point, i).unwrap();
+    }
+
+    // previous round selected point index
+    let mut res_selected_idx: Option<usize> = None;
+    // distance from each point to the selected point set
+    let mut dist_pts_to_selected_min = Array1::<f32>::from_elem((*p,), f32::INFINITY);
+    // selected points index
+    let mut selected_pts_idx = Vec::<usize>::with_capacity(n_samples);
+
+    while selected_pts_idx.len() < n_samples {
+        if let Some(prev_idx) = res_selected_idx {
+            // find nearest point
+            let nearest_idx = kdtree
+                .nearest(std_points_slice_vec[prev_idx], k, &squared_euclidean)
+                .unwrap();
+            for (dist, idx) in nearest_idx {
+                // dist_pts_to_selected_min[idx] = f32::min(dist_pts_to_selected_min[idx], dist);
+                let d = dist_pts_to_selected_min.get_mut(*idx).unwrap();
+                *d = f32::min(*d, dist);
+            }
+
+            let max_idx = dist_pts_to_selected_min
+                .indexed_iter()
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .unwrap()
+                .0;
+            selected_pts_idx.push(max_idx);
+            res_selected_idx = Some(max_idx);
+        } else {
+            // update distance at the first round
+            let dist = &points - &points.slice(s![start_idx, ..]);
+            let dist = dist.mapv(|x| x.powi(2)).sum_axis(Axis(1));
+            // update min distance
+            Zip::from(&mut dist_pts_to_selected_min)
+                .and(&dist)
+                .for_each(|x, &y| {
+                    *x = f32::min(*x, y);
+                });
+            // first point
+            selected_pts_idx.push(start_idx);
+            res_selected_idx = Some(start_idx);
+        }
+    }
+    selected_pts_idx.into()
+}
+
+#[pyfunction]
+#[pyo3(name = "_fps_npdu_kdtree_sampling")]
+fn fps_npdu_kdtree_sampling_py<'py>(
+    py: Python<'py>,
+    points: PyReadonlyArray2<f32>,
+    n_samples: usize,
+    k: usize,
+    start_idx: usize,
+) -> PyResult<&'py PyArray1<usize>> {
+    check_py_input(&points, n_samples, start_idx)?;
+    let points = points.as_array();
+    let idxs = py.allow_threads(|| fps_npdu_kdtree_sampling(points, n_samples, k, start_idx));
+    let ret = idxs.to_pyarray(py);
+    Ok(ret)
+}
+
 #[pymodule]
 fn fpsample(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(fps_sampling_py, m)?)?;
     m.add_function(wrap_pyfunction!(fps_npdu_sampling_py, m)?)?;
+    m.add_function(wrap_pyfunction!(fps_npdu_kdtree_sampling_py, m)?)?;
 
     Ok(())
 }
