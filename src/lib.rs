@@ -7,17 +7,36 @@ use numpy::{
 };
 use pyo3::prelude::*;
 
+mod bucket_fps;
+pub mod build_info {
+    include!("../build_info.rs");
+}
+
 fn check_py_input(
     points: &PyReadonlyArray2<f32>,
     n_samples: usize,
     start_idx: usize,
+    max_dim: Option<usize>,
 ) -> PyResult<()> {
-    let [p, _c] = points.shape() else {
+    let [p, c] = points.shape() else {
         return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
             "points must be a 2D array, but got shape {:?}",
             points.shape()
         )));
     };
+    if *c == 0 {
+        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(
+            "points must have at least one column",
+        ));
+    }
+    if let Some(max_dim) = max_dim {
+        if *c > max_dim {
+            return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                "points must have at most {} columns, but got {}",
+                max_dim, c
+            )));
+        }
+    }
     if n_samples > *p {
         return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
             "n_samples must be less than the number of points: n_samples={}, P={}",
@@ -82,7 +101,7 @@ fn fps_sampling_py<'py>(
     n_samples: usize,
     start_idx: usize,
 ) -> PyResult<&'py PyArray1<usize>> {
-    check_py_input(&points, n_samples, start_idx)?;
+    check_py_input(&points, n_samples, start_idx, None)?;
     let points = points.as_array();
     let idxs = py.allow_threads(|| fps_sampling(points, n_samples, start_idx));
     let ret = idxs.to_pyarray(py);
@@ -169,7 +188,7 @@ fn fps_npdu_sampling_py<'py>(
     k: usize,
     start_idx: usize,
 ) -> PyResult<&'py PyArray1<usize>> {
-    check_py_input(&points, n_samples, start_idx)?;
+    check_py_input(&points, n_samples, start_idx, None)?;
     let points = points.as_array();
     let idxs = py.allow_threads(|| fps_npdu_sampling(points, n_samples, k, start_idx));
     let ret = idxs.to_pyarray(py);
@@ -250,18 +269,74 @@ fn fps_npdu_kdtree_sampling_py<'py>(
     k: usize,
     start_idx: usize,
 ) -> PyResult<&'py PyArray1<usize>> {
-    check_py_input(&points, n_samples, start_idx)?;
+    check_py_input(&points, n_samples, start_idx, None)?;
     let points = points.as_array();
     let idxs = py.allow_threads(|| fps_npdu_kdtree_sampling(points, n_samples, k, start_idx));
     let ret = idxs.to_pyarray(py);
     Ok(ret)
 }
 
+//////////////////////
+//                  //
+//    bucket fps    //
+//                  //
+//////////////////////
+#[pyfunction]
+#[pyo3(name = "_bucket_fps_kdtree_sampling")]
+fn bucket_fps_kdtree_sampling<'py>(
+    py: Python<'py>,
+    points: PyReadonlyArray2<f32>,
+    n_samples: usize,
+    start_idx: usize,
+) -> PyResult<&'py PyArray1<usize>> {
+    check_py_input(
+        &points,
+        n_samples,
+        start_idx,
+        Some(build_info::BUCKET_FPS_MAX_DIM),
+    )?;
+    let points = points.as_array();
+    let idxs =
+        py.allow_threads(|| bucket_fps::bucket_fps_kdtree_sampling(points, n_samples, start_idx));
+    let ret = idxs.to_pyarray(py);
+    Ok(ret)
+}
+
+#[pyfunction]
+#[pyo3(name = "_bucket_fps_kdline_sampling")]
+fn bucket_fps_kdline_sampling<'py>(
+    py: Python<'py>,
+    points: PyReadonlyArray2<f32>,
+    n_samples: usize,
+    height: usize,
+    start_idx: usize,
+) -> PyResult<&'py PyArray1<usize>> {
+    check_py_input(
+        &points,
+        n_samples,
+        start_idx,
+        Some(build_info::BUCKET_FPS_MAX_DIM),
+    )?;
+    let points = points.as_array();
+    let idxs = py.allow_threads(|| {
+        bucket_fps::bucket_fps_kdline_sampling(points, n_samples, height, start_idx)
+    });
+    let ret = idxs.to_pyarray(py);
+    Ok(ret)
+}
+
+////////////////////////
+//                    //
+//    Python Entry    //
+//                    //
+////////////////////////
 #[pymodule]
 fn fpsample(_py: Python, m: &PyModule) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(fps_sampling_py, m)?)?;
     m.add_function(wrap_pyfunction!(fps_npdu_sampling_py, m)?)?;
     m.add_function(wrap_pyfunction!(fps_npdu_kdtree_sampling_py, m)?)?;
+    m.add_function(wrap_pyfunction!(bucket_fps_kdtree_sampling, m)?)?;
+    m.add_function(wrap_pyfunction!(bucket_fps_kdline_sampling, m)?)?;
 
     Ok(())
 }

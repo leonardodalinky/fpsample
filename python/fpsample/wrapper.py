@@ -3,11 +3,19 @@ from typing import Optional
 
 import numpy as np
 
-from .fpsample import _fps_npdu_kdtree_sampling, _fps_npdu_sampling, _fps_sampling
+from .fpsample import (
+    _bucket_fps_kdline_sampling,
+    _bucket_fps_kdtree_sampling,
+    _fps_npdu_kdtree_sampling,
+    _fps_npdu_sampling,
+    _fps_sampling,
+)
 
 
 def fps_sampling(pc: np.ndarray, n_samples: int) -> np.ndarray:
     """
+    Vanilla FPS sampling.
+
     Args:
         pc (np.ndarray): The input point cloud of shape (n_pts, D).
         n_samples (int): Number of samples.
@@ -26,12 +34,15 @@ def fps_sampling(pc: np.ndarray, n_samples: int) -> np.ndarray:
     return _fps_sampling(pc, n_samples, start_idx)
 
 
-def fps_npdu_sampling(pc: np.ndarray, n_samples: int, k: Optional[int] = None) -> np.ndarray:
+def fps_npdu_sampling(pc: np.ndarray, n_samples: int, w: Optional[int] = None) -> np.ndarray:
     """
+    FPS sampling with nearest-point-distance-updating (NPDU) heuristic strategy.
+    **Requires dimensional locality for best samples**.
+
     Args:
         pc (np.ndarray): The input point cloud of shape (n_pts, D).
         n_samples (int): Number of samples.
-        k (int, default=None): Windows size of local heuristic search. If set to None, it will be set to `n_pts / n_samples * 16`.
+        w (int, default=None): Windows size of local heuristic search. If set to None, it will be set to `n_pts / n_samples * 16`.
     Returns:
         np.ndarray: The selected indices of shape (n_samples,).
     """
@@ -40,17 +51,46 @@ def fps_npdu_sampling(pc: np.ndarray, n_samples: int, k: Optional[int] = None) -
     n_pts, _ = pc.shape
     assert n_pts >= n_samples, "n_pts should be >= n_samples"
     pc = pc.astype(np.float32)
-    k = k or int(n_pts / n_samples * 16)
-    if k >= n_pts - 1:
+    w = w or int(n_pts / n_samples * 16)
+    if w >= n_pts - 1:
         warnings.warn(f"k is too large, set to {n_pts - 1}")
-        k = n_pts - 1
+        w = n_pts - 1
     # Random pick a start
     start_idx = np.random.randint(low=0, high=n_pts)
-    return _fps_npdu_sampling(pc, n_samples, k, start_idx)
+    return _fps_npdu_sampling(pc, n_samples, w, start_idx)
 
 
-def fps_npdu_kdtree_sampling(pc: np.ndarray, n_samples: int, k: Optional[int] = None) -> np.ndarray:
+def fps_npdu_kdtree_sampling(pc: np.ndarray, n_samples: int, w: Optional[int] = None) -> np.ndarray:
     """
+    FPS sampling with nearest-point-distance-updating (NPDU) heuristic strategy.
+    Using KDTree to eliminate the need of dimensional locality.
+    Slower than `fps_npdu_sampling` but more robust.
+
+    Args:
+        pc (np.ndarray): The input point cloud of shape (n_pts, D).
+        n_samples (int): Number of samples.
+        w (int, default=None): Windows size of local heuristic search. If set to None, it will be set to `n_pts / n_samples * 16`.
+    Returns:
+        np.ndarray: The selected indices of shape (n_samples,).
+    """
+    assert n_samples >= 1, "n_samples should be >= 1"
+    assert pc.ndim == 2
+    n_pts, _ = pc.shape
+    assert n_pts >= n_samples, "n_pts should be >= n_samples"
+    pc = pc.astype(np.float32)
+    w = w or int(n_pts / n_samples * 16)
+    if w >= n_pts:
+        warnings.warn(f"k is too large, set to {n_pts}")
+        w = n_pts
+    # Random pick a start
+    start_idx = np.random.randint(low=0, high=n_pts)
+    return _fps_npdu_kdtree_sampling(pc, n_samples, w, start_idx)
+
+
+def bucket_fps_kdtree_sampling(pc: np.ndarray, n_samples: int) -> np.ndarray:
+    """
+    Bucket-based FPS sampling using KDTree. Also called "QuickFPS" in the paper.
+
     Args:
         pc (np.ndarray): The input point cloud of shape (n_pts, D).
         n_samples (int): Number of samples.
@@ -63,10 +103,33 @@ def fps_npdu_kdtree_sampling(pc: np.ndarray, n_samples: int, k: Optional[int] = 
     n_pts, _ = pc.shape
     assert n_pts >= n_samples, "n_pts should be >= n_samples"
     pc = pc.astype(np.float32)
-    k = k or int(n_pts / n_samples * 16)
-    if k >= n_pts:
-        warnings.warn(f"k is too large, set to {n_pts}")
-        k = n_pts
     # Random pick a start
     start_idx = np.random.randint(low=0, high=n_pts)
-    return _fps_npdu_kdtree_sampling(pc, n_samples, k, start_idx)
+    return _bucket_fps_kdtree_sampling(pc, n_samples, start_idx)
+
+
+def bucket_fps_kdline_sampling(pc: np.ndarray, n_samples: int, h: int) -> np.ndarray:
+    """
+    Bucket-based FPS sampling using KDTree, with multiple points in each bucket. Also called "QuickFPS" in the paper.
+
+    Args:
+        pc (np.ndarray): The input point cloud of shape (n_pts, D).
+        n_samples (int): Number of samples.
+        h (int, default=None): Height of KDTree. The bucket size is `2**h`.
+            According to the paper, for small workload, h=3 is enough;
+            for medium workload, h=7 is enough; for large workload, h=9 is enough.
+
+    Returns:
+        np.ndarray: The selected indices of shape (n_samples,).
+    """
+    assert n_samples >= 1, "n_samples should be >= 1"
+    assert pc.ndim == 2
+    n_pts, _ = pc.shape
+    assert n_pts >= n_samples, "n_pts should be >= n_samples"
+    assert h >= 1, "h should be >= 1"
+    assert 2**h <= n_pts, "2**h should be <= n_pts"
+    pc = pc.astype(np.float32)
+
+    # Random pick a start
+    start_idx = np.random.randint(low=0, high=n_pts)
+    return _bucket_fps_kdline_sampling(pc, n_samples, h, start_idx)

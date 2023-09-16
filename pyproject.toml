@@ -1,10 +1,10 @@
 [build-system]
-requires = ["maturin>=1.2,<2.0"]
+requires = ["maturin>=1.2,<2.0", "patchelf>=0.17"]
 build-backend = "maturin"
 
 [project]
 name = "fpsample"
-version = "0.2.0"
+version = "0.3.0"
 authors = [{ name = "Leonard Lin", email = "leonard.keilin@gmail.com" }]
 keyword = [
     "sampling",
