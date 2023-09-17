@@ -25,7 +25,6 @@ jobs:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
           docker-options: -e CXXSTDLIB=stdc++
-          sccache: 'true'
           manylinux: '2_28'
       - name: Upload wheels
         uses: actions/upload-artifact@v3
@@ -49,7 +48,6 @@ jobs:
         with:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
-          sccache: 'true'
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
