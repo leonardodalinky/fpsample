@@ -67,11 +67,10 @@ jobs:
       - name: Build wheels
         uses: PyO3/maturin-action@v1
         env:
-          CXXSTDLIB: c++
+          FORCE_CXXSTDLIB: 'c++'
         with:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
-          sccache: 'true'
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
