@@ -74,3 +74,6 @@ docs/_build/
 # tmp files
 tmp*
 *.out
+
+# tmp benchmark
+.benchmarks/
