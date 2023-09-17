@@ -46,11 +46,10 @@ template <typename T, size_t DIM, typename S> class KDTreeBase {
     virtual void sample(size_t sample_num) = 0;
 
   private:
-    NodePtr divideTree(ssize_t left, ssize_t right, _Interval (&bbox_ptr)[DIM],
+    NodePtr divideTree(long left, long right, _Interval (&bbox_ptr)[DIM],
                        size_t curr_high);
 
-    size_t planeSplit(ssize_t left, ssize_t right, size_t split_dim,
-                      T split_val);
+    size_t planeSplit(long left, long right, size_t split_dim, T split_val);
 
     T qSelectMedian(size_t dim, size_t left, size_t right);
     static size_t findSplitDim(const _Interval (&bbox_ptr)[DIM]);
@@ -95,10 +94,10 @@ typename KDTreeBase<T, DIM, S>::NodePtr KDTreeBase<T, DIM, S>::get_root() {
 
 template <typename T, size_t DIM, typename S>
 typename KDTreeBase<T, DIM, S>::NodePtr KDTreeBase<T, DIM, S>::divideTree(
-    ssize_t left, ssize_t right, _Interval (&bbox_ptr)[DIM], size_t curr_high) {
+    long left, long right, _Interval (&bbox_ptr)[DIM], size_t curr_high) {
     NodePtr node = new KDNode<T, DIM, S>(bbox_ptr);
 
-    ssize_t count = right - left;
+    long count = right - left;
     if (this->leftNode(curr_high, count)) {
         node->pointLeft = left;
         node->pointRight = right;
@@ -123,10 +122,10 @@ typename KDTreeBase<T, DIM, S>::NodePtr KDTreeBase<T, DIM, S>::divideTree(
 }
 
 template <typename T, size_t DIM, typename S>
-size_t KDTreeBase<T, DIM, S>::planeSplit(ssize_t left, ssize_t right,
+size_t KDTreeBase<T, DIM, S>::planeSplit(long left, long right,
                                          size_t split_dim, T split_val) {
-    ssize_t start = left;
-    ssize_t end = right - 1;
+    long start = left;
+    long end = right - 1;
 
     for (;;) {
         while (start <= end && points_[start].pos[split_dim] < split_val)
@@ -141,7 +140,7 @@ size_t KDTreeBase<T, DIM, S>::planeSplit(ssize_t left, ssize_t right,
         --end;
     }
 
-    ssize_t lim1 = start - left;
+    long lim1 = start - left;
     if (start == left)
         lim1 = 1;
     if (start == right)
