@@ -24,8 +24,9 @@ jobs:
         with:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter
+          docker-options: -e CXXSTDLIB=stdc++
           sccache: 'true'
-          manylinux: auto
+          manylinux: 2014/2_17
       - name: Upload wheels
         uses: actions/upload-artifact@v3
         with:
@@ -67,6 +68,8 @@ jobs:
           python-version: '3.10'
       - name: Build wheels
         uses: PyO3/maturin-action@v1
+        env:
+          CXXSTDLIB: c++
         with:
           target: ${{ matrix.target }}
           args: --release --out dist --find-interpreter

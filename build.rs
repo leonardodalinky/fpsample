@@ -10,8 +10,8 @@ fn main() {
             build_info::BUCKET_FPS_MAX_DIM.to_string().as_str(),
         )
         .cpp(true)
-        .flag("-Wno-array-bounds")
-        .flag("-std=c++17")
+        .std("c++14")
+        .warnings(false)
         .include("src/bucket_fps/_ext")
         .compile("bucketfps");
 }
