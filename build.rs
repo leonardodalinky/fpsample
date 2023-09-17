@@ -10,7 +10,7 @@ fn main() {
             build_info::BUCKET_FPS_MAX_DIM.to_string().as_str(),
         )
         .cpp(true)
-        // .std("c++14")    FIXME: error in some arch
+        .std("c++14")
         .warnings(false)
         .include("src/bucket_fps/_ext")
         .compile("bucketfps");

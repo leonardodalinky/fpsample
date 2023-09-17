@@ -28,6 +28,8 @@ The library is built using [maturin](https://github.com/PyO3/maturin). Therefore
 pip install -r requirements.txt
 ```
 
+C++ compiler must support C++14. For example, `gcc>=5.0` or `clang>=3.4`.
+
 Build the library and install using:
 ```shell
 maturin develop --release

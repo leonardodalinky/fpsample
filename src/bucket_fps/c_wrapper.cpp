@@ -84,7 +84,7 @@ template <typename T, typename S = T> struct kdtree_func_helper {
 
 template <typename T, typename S = T> struct kdline_func_helper {
     template <size_t DIM> KDLineFuncType operator()() {
-        return &kdline_sample<T, DIM, S>;
+        return DIM == 0 ? nullptr : &kdline_sample<T, DIM, S>;
     }
 };
 
