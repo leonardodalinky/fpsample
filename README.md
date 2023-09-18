@@ -20,6 +20,10 @@ Python efficient farthest point sampling (FPS) library, 100x faster than `numpy`
 pip install -U fpsample
 ```
 
+*NOTE: Only 64 bit package provided.*
+
+If you encounter any installation errors, please make an issue and try to compile from source.
+
 ### Build from source
 
 The library is built using [maturin](https://github.com/PyO3/maturin). Therefore, `rust` and `cargo` are required for compiling.
@@ -34,6 +38,12 @@ Build the library and install using:
 ```shell
 maturin develop --release
 ```
+
+#### Compile options
+
+For macos users, if the compilation fails to link libstdc++, try to pass `FORCE_CXXSTDLIB=c++` as an environment variable.
+
+For users that want larger maximum dimension support (currently set to 8), check `build_info.rs` for details.
 
 ## Usage
 
@@ -77,6 +87,7 @@ kdline_fps_samples_idx = fpsample.bucket_fps_kdline_sampling(pc, 1024, h=7)
 Setup:
   - CPU: Intel(R) Core(TM) i9-10940X CPU @ 3.30GHz
   - RAM: 128 GiB
+  - SYSTEM: Ubuntu 22.04.3 LTS
 
 Run benchmark:
 ```shell
