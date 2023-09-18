@@ -129,7 +129,6 @@ def bucket_fps_kdline_sampling(pc: np.ndarray, n_samples: int, h: int) -> np.nda
     assert h >= 1, "h should be >= 1"
     assert 2**h <= n_pts, "2**h should be <= n_pts"
     pc = pc.astype(np.float32)
-
     # Random pick a start
     start_idx = np.random.randint(low=0, high=n_pts)
     return _bucket_fps_kdline_sampling(pc, n_samples, h, start_idx)

@@ -131,7 +131,7 @@ The nearest-point-distance-updating (NPDU) heuristic strategy is proposed in the
 }
 ```
 
-Bucket-based farthest point sampling (QuickFPS) is proposed in the following paper. The implementation is based on the author's [Repo](https://github.com/hanm2019/bucket-based_farthest-point-sampling_CPU).
+Bucket-based farthest point sampling (QuickFPS) is proposed in the following paper. The implementation is based on the author's [Repo](https://github.com/hanm2019/bucket-based_farthest-point-sampling_CPU). To port the implementation to other C++ program, check [this](https://github.com/leonardodalinky/fpsample/tree/main/src/bucket_fps/_ext) for details.
 ```
 @article{han2023quickfps,
   title={QuickFPS: Architecture and Algorithm Co-Design for Farthest Point Sampling in Large-Scale Point Clouds},

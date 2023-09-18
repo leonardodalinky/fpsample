@@ -87,7 +87,7 @@ bool KDLineTree<T, DIM, S>::leftNode(size_t high, size_t count) {
 
 template <typename T, size_t DIM, typename S>
 void KDLineTree<T, DIM, S>::addNode(NodePtr p) {
-    int nodeIdx = KDNode_list.size();
+    size_t nodeIdx = KDNode_list.size();
     p->idx = nodeIdx;
     KDNode_list.push_back(p);
 }

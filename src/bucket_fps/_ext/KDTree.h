@@ -22,11 +22,9 @@ class KDTree : public KDTreeBase<T, DIM, S> {
 
     void sample(size_t sample_num) override;
 
-    bool leftNode([[maybe_unused]] size_t high, size_t count) override {
-        return count == 1;
-    };
+    bool leftNode(size_t, size_t count) override { return count == 1; };
 
-    void addNode([[maybe_unused]] NodePtr p) override{};
+    void addNode(NodePtr) override{};
 };
 
 template <typename T, size_t DIM, typename S>
