@@ -11,6 +11,8 @@
 #include <algorithm>
 #include <limits>
 
+namespace quickfps {
+
 template <typename T, size_t DIM, typename S = T> class Point {
   public:
     T pos[DIM]; // x, y, z
@@ -96,5 +98,7 @@ S Point<T, DIM, S>::updateDistanceAndCount(const Point &ref, size_t &count) {
 template <typename T, size_t DIM, typename S> void Point<T, DIM, S>::reset() {
     this->dis = std::numeric_limits<S>::max();
 }
+
+} // namespace quickfps
 
 #endif // KD_TREE_BASED_FARTHEST_POINT_SAMPLING_POINT_H

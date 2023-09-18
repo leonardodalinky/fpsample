@@ -8,6 +8,8 @@
 
 #include "KDTreeBase.h"
 
+namespace quickfps {
+
 template <typename T, size_t DIM, typename S = T>
 class KDTree : public KDTreeBase<T, DIM, S> {
   public:
@@ -16,13 +18,13 @@ class KDTree : public KDTreeBase<T, DIM, S> {
     using typename KDTreeBase<T, DIM, S>::NodePtr;
     explicit KDTree(_Points data, size_t pointSize, _Points samplePoints);
 
-    _Point max_point() override;
+    _Point max_point() override { return this->root_->max_point; };
 
     void update_distance(const _Point &ref_point) override;
 
     void sample(size_t sample_num) override;
 
-    bool leftNode(size_t, size_t count) override { return count == 1; };
+    bool leftNode(size_t, size_t count) const override { return count == 1; };
 
     void addNode(NodePtr) override{};
 };
@@ -30,11 +32,6 @@ class KDTree : public KDTreeBase<T, DIM, S> {
 template <typename T, size_t DIM, typename S>
 KDTree<T, DIM, S>::KDTree(_Points data, size_t pointSize, _Points samplePoints)
     : KDTreeBase<T, DIM, S>(data, pointSize, samplePoints) {}
-
-template <typename T, size_t DIM, typename S>
-typename KDTree<T, DIM, S>::_Point KDTree<T, DIM, S>::max_point() {
-    return this->root_->max_point;
-}
 
 template <typename T, size_t DIM, typename S>
 void KDTree<T, DIM, S>::update_distance(const _Point &ref_point) {
@@ -51,5 +48,7 @@ void KDTree<T, DIM, S>::sample(size_t sample_num) {
         this->update_distance(ref_point);
     }
 }
+
+} // namespace quickfps
 
 #endif // FPS_CPU_KDTREE_H

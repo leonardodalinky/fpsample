@@ -12,6 +12,8 @@
 #include "Interval.h"
 #include "Point.h"
 
+namespace quickfps {
+
 template <typename T, size_t DIM, typename S> class KDNode {
   public:
     using _Point = Point<T, DIM, S>;
@@ -185,5 +187,7 @@ template <typename T, size_t DIM, typename S> size_t KDNode<T, DIM, S>::size() {
         return this->left->size() + this->right->size();
     return (pointRight - pointLeft);
 }
+
+} // namespace quickfps
 
 #endif // KD_TREE_BASED_FARTHEST_POINT_SAMPLING_KDNODE_H

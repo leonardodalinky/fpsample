@@ -10,6 +10,8 @@
 #include "Point.h"
 #include <algorithm>
 
+namespace quickfps {
+
 template <typename T, size_t DIM, typename S> class KDTreeBase {
   public:
     using _Point = Point<T, DIM, S>;
@@ -31,13 +33,13 @@ template <typename T, size_t DIM, typename S> class KDTreeBase {
 
     void buildKDtree();
 
-    NodePtr get_root();
+    NodePtr get_root() const { return this->root_; };
 
     void init(const _Point &ref);
 
     virtual void addNode(NodePtr p) = 0;
 
-    virtual bool leftNode(size_t high, size_t count) = 0;
+    virtual bool leftNode(size_t high, size_t count) const = 0;
 
     virtual _Point max_point() = 0;
 
@@ -46,10 +48,11 @@ template <typename T, size_t DIM, typename S> class KDTreeBase {
     virtual void sample(size_t sample_num) = 0;
 
   private:
-    NodePtr divideTree(long left, long right, _Interval (&bbox_ptr)[DIM],
+    NodePtr divideTree(ssize_t left, ssize_t right, _Interval (&bbox_ptr)[DIM],
                        size_t curr_high);
 
-    size_t planeSplit(long left, long right, size_t split_dim, T split_val);
+    size_t planeSplit(ssize_t left, ssize_t right, size_t split_dim,
+                      T split_val);
 
     T qSelectMedian(size_t dim, size_t left, size_t right);
     static size_t findSplitDim(const _Interval (&bbox_ptr)[DIM]);
@@ -84,20 +87,15 @@ void KDTreeBase<T, DIM, S>::buildKDtree() {
     size_t left = 0;
     size_t right = pointSize;
     computeBoundingBox(left, right, bbox);
-    root_ = divideTree(left, right, bbox, 0);
-}
-
-template <typename T, size_t DIM, typename S>
-typename KDTreeBase<T, DIM, S>::NodePtr KDTreeBase<T, DIM, S>::get_root() {
-    return root_;
+    this->root_ = divideTree(left, right, bbox, 0);
 }
 
 template <typename T, size_t DIM, typename S>
 typename KDTreeBase<T, DIM, S>::NodePtr KDTreeBase<T, DIM, S>::divideTree(
-    long left, long right, _Interval (&bbox_ptr)[DIM], size_t curr_high) {
+    ssize_t left, ssize_t right, _Interval (&bbox_ptr)[DIM], size_t curr_high) {
     NodePtr node = new KDNode<T, DIM, S>(bbox_ptr);
 
-    long count = right - left;
+    ssize_t count = right - left;
     if (this->leftNode(curr_high, count)) {
         node->pointLeft = left;
         node->pointRight = right;
@@ -122,10 +120,10 @@ typename KDTreeBase<T, DIM, S>::NodePtr KDTreeBase<T, DIM, S>::divideTree(
 }
 
 template <typename T, size_t DIM, typename S>
-size_t KDTreeBase<T, DIM, S>::planeSplit(long left, long right,
+size_t KDTreeBase<T, DIM, S>::planeSplit(ssize_t left, ssize_t right,
                                          size_t split_dim, T split_val) {
-    long start = left;
-    long end = right - 1;
+    ssize_t start = left;
+    ssize_t end = right - 1;
 
     for (;;) {
         while (start <= end && points_[start].pos[split_dim] < split_val)
@@ -140,13 +138,13 @@ size_t KDTreeBase<T, DIM, S>::planeSplit(long left, long right,
         --end;
     }
 
-    long lim1 = start - left;
+    ssize_t lim1 = start - left;
     if (start == left)
         lim1 = 1;
     if (start == right)
         lim1 = (right - left - 1);
 
-    return (size_t)lim1;
+    return static_cast<ssize_t>(lim1);
 }
 
 template <typename T, size_t DIM, typename S>
@@ -207,5 +205,7 @@ void KDTreeBase<T, DIM, S>::init(const _Point &ref) {
     this->sample_points[0] = ref;
     this->root_->init(ref);
 }
+
+} // namespace quickfps
 
 #endif // KD_TREE_BASED_FARTHEST_POINT_SAMPLING_KDTREE_H

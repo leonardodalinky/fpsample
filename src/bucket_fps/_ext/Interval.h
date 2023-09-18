@@ -6,6 +6,7 @@
 #ifndef KD_TREE_BASED_FARTHEST_POINT_SAMPLING_INTERVAL_HPP
 #define KD_TREE_BASED_FARTHEST_POINT_SAMPLING_INTERVAL_HPP
 
+namespace quickfps {
 template <typename S> class Interval {
   public:
     S low, high;
@@ -13,5 +14,6 @@ template <typename S> class Interval {
     Interval(S low, S high) : low(low), high(high){};
     Interval(const Interval &o) : low(o.low), high(o.high){};
 };
+} // namespace quickfps
 
 #endif // KD_TREE_BASED_FARTHEST_POINT_SAMPLING_INTERVAL_HPP

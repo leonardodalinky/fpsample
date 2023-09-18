@@ -10,6 +10,10 @@
 #endif
 constexpr size_t max_dim = BUCKET_FPS_MAX_DIM;
 
+using quickfps::KDLineTree;
+using quickfps::KDTree;
+using quickfps::Point;
+
 template <typename T, size_t DIM, typename S>
 std::vector<Point<T, DIM, S>> raw_data_to_points(const float *raw_data,
                                                  size_t n_points, size_t dim) {

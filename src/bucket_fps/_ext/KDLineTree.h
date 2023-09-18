@@ -11,6 +11,8 @@
 
 #include "KDTreeBase.h"
 
+namespace quickfps {
+
 template <typename T, size_t DIM, typename S = T>
 class KDLineTree : public KDTreeBase<T, DIM, S> {
   public:
@@ -32,7 +34,9 @@ class KDLineTree : public KDTreeBase<T, DIM, S> {
 
     void sample(size_t sample_num) override;
 
-    bool leftNode(size_t high, size_t count) override;
+    bool leftNode(size_t high, size_t count) const override {
+        return high == this->high_ || count == 1;
+    };
 
     void addNode(NodePtr p) override;
 };
@@ -74,15 +78,10 @@ template <typename T, size_t DIM, typename S>
 void KDLineTree<T, DIM, S>::sample(size_t sample_num) {
     _Point ref_point;
     for (size_t i = 1; i < sample_num; i++) {
-        ref_point = max_point();
+        ref_point = this->max_point();
         this->sample_points[i] = ref_point;
         this->update_distance(ref_point);
     }
-}
-
-template <typename T, size_t DIM, typename S>
-bool KDLineTree<T, DIM, S>::leftNode(size_t high, size_t count) {
-    return high == high_ || count == 1;
 }
 
 template <typename T, size_t DIM, typename S>
@@ -91,5 +90,7 @@ void KDLineTree<T, DIM, S>::addNode(NodePtr p) {
     p->idx = nodeIdx;
     KDNode_list.push_back(p);
 }
+
+} // namespace quickfps
 
 #endif // FPS_CPU_KDLINETREE_H
