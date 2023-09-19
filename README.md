@@ -43,7 +43,11 @@ maturin develop --release
 
 For macos users, if the compilation fails to link libstdc++, try to pass `FORCE_CXXSTDLIB=c++` as an environment variable.
 
-For users that want larger maximum dimension support (currently set to 8), check `build_info.rs` for details.
+For users that want larger maximum dimension support (currently set to 8), modify `build_info.rs` and compile.
+
+#### Direct porting of `QuickFPS`
+
+See `src/bucket_fps/c_warpper.cpp` and `src/bucket_fps/_ext/` for details.
 
 ## Usage
 
@@ -72,14 +76,14 @@ fps_npdu_kdtree_samples_idx = fpsample.fps_npdu_kdtree_sampling(pc, 1024, k=64)
 kdtree_fps_samples_idx = fpsample.bucket_fps_kdtree_sampling(pc, 1024)
 
 # Bucket-based FPS or QuickFPS
-kdline_fps_samples_idx = fpsample.bucket_fps_kdline_sampling(pc, 1024, h=7)
+kdline_fps_samples_idx = fpsample.bucket_fps_kdline_sampling(pc, 1024, h=3)
 ```
 
 * `FPS`: Vanilla farthest point sampling. Implemented in Rust. Achieve the same performance as `numpy`.
 * `FPS + NPDU`: Farthest point sampling with nearest-point-distance-updating (NPDU) heuristic strategy. 5x~10x faster than vanilla FPS. **Require dimensional locality and give sub-optimal answers**.
 * `FPS + NPDU + KDTree`: Farthest point sampling with NPDU heuristic strategy and KDTree. 3x~8x faster than vanilla FPS. Slightly slower than `FPS + NPDU`. But **DOES NOT** require dimensional locality.
-* `KDTree-based FPS`: A farthest point sampling algorithm based on KDTree. About 50x faster than vanilla FPS.
-* `Bucket-based FPS` or `QuickFPS`: A bucket-based farthest point sampling algorithm. About 100x faster than vanilla FPS. Require an additional hyperparameter for the height of the KDTree. In practice, `h=3` is recommended for small data, `h=7` is recommended for medium data, and `h=9` for extremely large data.
+* `KDTree-based FPS`: A farthest point sampling algorithm based on KDTree. About 40~50x faster than vanilla FPS.
+* `Bucket-based FPS` or `QuickFPS`: A bucket-based farthest point sampling algorithm. About 80~100x faster than vanilla FPS. Require an additional hyperparameter for the height of the KDTree. In practice, `h=3` or `h=5` is recommended for small data, `h=7` is recommended for medium data, and `h=9` for extremely large data.
 
 **NOTE**: In most cases, `Bucket-based FPS` is the best choice, with proper hyperparameter setting.
 
@@ -91,40 +95,46 @@ Setup:
 
 Run benchmark:
 ```shell
-pytest bench/ --benchmark-columns=min,mean,stddev
+pytest bench/ --benchmark-columns=mean,stddev --benchmark-sort=mean
 ```
 
 Results:
 ```
--------------------------- benchmark '1024 of 4096': 5 tests --------------------------
-Name (time in ms)                    Min               Mean            StdDev
----------------------------------------------------------------------------------------
-test_bucket_fps_kdline_4k_h3      2.0043 (1.0)       2.3166 (1.0)      0.3812 (5.51)
-test_fps_npdu_4k                  3.5585 (1.78)      3.7348 (1.61)     0.0691 (1.0)
-test_bucket_fps_kdtree_4k         6.4947 (3.24)      7.0000 (3.02)     0.4249 (6.15)
-test_fps_npdu_kdtree_4k          13.2702 (6.62)     13.9802 (6.03)     0.3151 (4.56)
-test_vanilla_fps_4k              14.3000 (7.13)     15.0144 (6.48)     0.3563 (5.15)
----------------------------------------------------------------------------------------
+---------------- benchmark '1024 of 4096': 7 tests -----------------
+Name (time in ms)                   Mean            StdDev
+--------------------------------------------------------------------
+test_bucket_fps_kdline_4k_h5      1.9469 (1.0)      0.0354 (1.54)
+test_bucket_fps_kdline_4k_h3      2.0028 (1.03)     0.0750 (3.27)
+test_fps_npdu_4k                  3.3361 (1.71)     0.0229 (1.0)
+test_bucket_fps_kdline_4k_h7      3.6899 (1.90)     0.0548 (2.39)
+test_bucket_fps_kdtree_4k         6.5072 (3.34)     0.4018 (17.52)
+test_fps_npdu_kdtree_4k          12.3689 (6.35)     0.0380 (1.66)
+test_vanilla_fps_4k              14.1073 (7.25)     0.4171 (18.20)
+--------------------------------------------------------------------
 
----------------------------- benchmark '4096 of 50000': 5 tests ---------------------------
-Name (time in ms)                      Min                Mean             StdDev
--------------------------------------------------------------------------------------------
-test_bucket_fps_kdline_50k_h7      23.8785 (1.0)       25.8189 (1.0)       1.0348 (1.0)
-test_bucket_fps_kdtree_50k         90.6234 (3.80)      99.7299 (3.86)      4.8106 (4.65)
-test_fps_npdu_50k                 140.5237 (5.88)     146.9772 (5.69)      5.3462 (5.17)
-test_fps_npdu_kdtree_50k          315.5046 (13.21)    324.7891 (12.58)     8.2886 (8.01)
-test_vanilla_fps_50k              900.7202 (37.72)    916.6968 (35.50)    11.2134 (10.84)
--------------------------------------------------------------------------------------------
+----------------- benchmark '4096 of 50000': 7 tests -----------------
+Name (time in ms)                     Mean            StdDev
+----------------------------------------------------------------------
+test_bucket_fps_kdline_50k_h7      25.7244 (1.0)      0.5605 (1.0)
+test_bucket_fps_kdline_50k_h5      30.0820 (1.17)     0.5973 (1.07)
+test_bucket_fps_kdline_50k_h3      59.9939 (2.33)     1.0208 (1.82)
+test_bucket_fps_kdtree_50k         98.2151 (3.82)     5.1610 (9.21)
+test_fps_npdu_50k                 129.3240 (5.03)     0.5638 (1.01)
+test_fps_npdu_kdtree_50k          287.4457 (11.17)    8.5040 (15.17)
+test_vanilla_fps_50k              794.4958 (30.88)    5.2105 (9.30)
+----------------------------------------------------------------------
 
------------------------------- benchmark '50000 of 100000': 5 tests ------------------------------
-Name (time in ms)                          Min                   Mean             StdDev
---------------------------------------------------------------------------------------------------
-test_bucket_fps_kdline_100k_h7        262.8185 (1.0)         270.1024 (1.0)       7.9086 (1.14)
-test_bucket_fps_kdtree_100k           436.0765 (1.66)        441.7569 (1.64)      6.9266 (1.0)
-test_fps_npdu_100k                  3,325.4431 (12.65)     3,341.8474 (12.37)    16.0163 (2.31)
-test_fps_npdu_kdtree_100k           4,698.6172 (17.88)     4,712.4720 (17.45)    12.0861 (1.74)
-test_vanilla_fps_100k              23,520.6776 (89.49)    23,542.1331 (87.16)    22.5513 (3.26)
---------------------------------------------------------------------------------------------------
+------------------- benchmark '50000 of 100000': 7 tests -------------------
+Name (time in ms)                         Mean              StdDev
+----------------------------------------------------------------------------
+test_bucket_fps_kdline_100k_h7        247.6833 (1.0)        4.8640 (6.85)
+test_bucket_fps_kdline_100k_h5        393.8612 (1.59)       3.8099 (5.37)
+test_bucket_fps_kdtree_100k           419.4466 (1.69)       8.5836 (12.09)
+test_bucket_fps_kdline_100k_h9        437.0670 (1.76)       2.8537 (4.02)
+test_fps_npdu_100k                  2,990.6574 (12.07)      0.7101 (1.0)
+test_fps_npdu_kdtree_100k           4,236.8786 (17.11)      3.3208 (4.68)
+test_vanilla_fps_100k              20,131.7747 (81.28)    155.4407 (218.91)
+----------------------------------------------------------------------------
 ```
 
 ## Reference

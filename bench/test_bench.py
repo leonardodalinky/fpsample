@@ -61,6 +61,20 @@ def test_bucket_fps_kdline_4k_h3(benchmark):
     benchmark(fpsample.bucket_fps_kdline_sampling, pc, n_samples, 3)
 
 
+@pytest.mark.benchmark(**TEST_BENCHMARK_SETTINGS["4k"])
+def test_bucket_fps_kdline_4k_h5(benchmark):
+    n_points, n_samples, n_dim = TEST_CASE_SETTINGS["4k"]
+    pc = create_sample_data(n_points, n_dim)
+    benchmark(fpsample.bucket_fps_kdline_sampling, pc, n_samples, 5)
+
+
+@pytest.mark.benchmark(**TEST_BENCHMARK_SETTINGS["4k"])
+def test_bucket_fps_kdline_4k_h7(benchmark):
+    n_points, n_samples, n_dim = TEST_CASE_SETTINGS["4k"]
+    pc = create_sample_data(n_points, n_dim)
+    benchmark(fpsample.bucket_fps_kdline_sampling, pc, n_samples, 7)
+
+
 #####################
 #                   #
 #    50k setting    #
@@ -92,6 +106,20 @@ def test_bucket_fps_kdtree_50k(benchmark):
     n_points, n_samples, n_dim = TEST_CASE_SETTINGS["50k"]
     pc = create_sample_data(n_points, n_dim)
     benchmark(fpsample.bucket_fps_kdtree_sampling, pc, n_samples)
+
+
+@pytest.mark.benchmark(**TEST_BENCHMARK_SETTINGS["50k"])
+def test_bucket_fps_kdline_50k_h3(benchmark):
+    n_points, n_samples, n_dim = TEST_CASE_SETTINGS["50k"]
+    pc = create_sample_data(n_points, n_dim)
+    benchmark(fpsample.bucket_fps_kdline_sampling, pc, n_samples, 3)
+
+
+@pytest.mark.benchmark(**TEST_BENCHMARK_SETTINGS["50k"])
+def test_bucket_fps_kdline_50k_h5(benchmark):
+    n_points, n_samples, n_dim = TEST_CASE_SETTINGS["50k"]
+    pc = create_sample_data(n_points, n_dim)
+    benchmark(fpsample.bucket_fps_kdline_sampling, pc, n_samples, 5)
 
 
 @pytest.mark.benchmark(**TEST_BENCHMARK_SETTINGS["50k"])
@@ -135,7 +163,21 @@ def test_bucket_fps_kdtree_100k(benchmark):
 
 
 @pytest.mark.benchmark(**TEST_BENCHMARK_SETTINGS["100k"])
+def test_bucket_fps_kdline_100k_h5(benchmark):
+    n_points, n_samples, n_dim = TEST_CASE_SETTINGS["100k"]
+    pc = create_sample_data(n_points, n_dim)
+    benchmark(fpsample.bucket_fps_kdline_sampling, pc, n_samples, 5)
+
+
+@pytest.mark.benchmark(**TEST_BENCHMARK_SETTINGS["100k"])
 def test_bucket_fps_kdline_100k_h7(benchmark):
     n_points, n_samples, n_dim = TEST_CASE_SETTINGS["100k"]
     pc = create_sample_data(n_points, n_dim)
     benchmark(fpsample.bucket_fps_kdline_sampling, pc, n_samples, 7)
+
+
+@pytest.mark.benchmark(**TEST_BENCHMARK_SETTINGS["100k"])
+def test_bucket_fps_kdline_100k_h9(benchmark):
+    n_points, n_samples, n_dim = TEST_CASE_SETTINGS["100k"]
+    pc = create_sample_data(n_points, n_dim)
+    benchmark(fpsample.bucket_fps_kdline_sampling, pc, n_samples, 9)
