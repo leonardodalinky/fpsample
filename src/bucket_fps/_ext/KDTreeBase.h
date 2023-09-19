@@ -9,6 +9,8 @@
 #include "KDNode.h"
 #include "Point.h"
 #include <algorithm>
+#include <array>
+#include <numeric>
 
 namespace quickfps {
 
@@ -29,35 +31,33 @@ template <typename T, size_t DIM, typename S> class KDTreeBase {
 
     ~KDTreeBase();
 
-    void deleteNode(NodePtr node_p);
-
     void buildKDtree();
 
     NodePtr get_root() const { return this->root_; };
 
     void init(const _Point &ref);
 
-    virtual void addNode(NodePtr p) = 0;
-
-    virtual bool leftNode(size_t high, size_t count) const = 0;
-
     virtual _Point max_point() = 0;
-
-    virtual void update_distance(const _Point &ref_point) = 0;
 
     virtual void sample(size_t sample_num) = 0;
 
-  private:
-    NodePtr divideTree(ssize_t left, ssize_t right, _Interval (&bbox_ptr)[DIM],
+  protected:
+    void deleteNode(NodePtr node_p);
+    virtual void addNode(NodePtr p) = 0;
+    virtual bool leftNode(size_t high, size_t count) const = 0;
+    virtual void update_distance(const _Point &ref_point) = 0;
+
+    NodePtr divideTree(ssize_t left, ssize_t right,
+                       const std::array<_Interval, DIM> &bboxs,
                        size_t curr_high);
 
     size_t planeSplit(ssize_t left, ssize_t right, size_t split_dim,
                       T split_val);
 
     T qSelectMedian(size_t dim, size_t left, size_t right);
-    static size_t findSplitDim(const _Interval (&bbox_ptr)[DIM]);
-    inline void computeBoundingBox(size_t left, size_t right,
-                                   _Interval (&bbox_ptr)[DIM]);
+    static size_t findSplitDim(const std::array<_Interval, DIM> &bboxs);
+    inline std::array<_Interval, DIM> computeBoundingBox(size_t left,
+                                                         size_t right);
 };
 
 template <typename T, size_t DIM, typename S>
@@ -83,17 +83,18 @@ void KDTreeBase<T, DIM, S>::deleteNode(NodePtr node_p) {
 
 template <typename T, size_t DIM, typename S>
 void KDTreeBase<T, DIM, S>::buildKDtree() {
-    _Interval bbox[DIM];
     size_t left = 0;
     size_t right = pointSize;
-    computeBoundingBox(left, right, bbox);
-    this->root_ = divideTree(left, right, bbox, 0);
+    std::array<_Interval, DIM> bboxs = this->computeBoundingBox(left, right);
+    this->root_ = divideTree(left, right, bboxs, 0);
 }
 
 template <typename T, size_t DIM, typename S>
-typename KDTreeBase<T, DIM, S>::NodePtr KDTreeBase<T, DIM, S>::divideTree(
-    ssize_t left, ssize_t right, _Interval (&bbox_ptr)[DIM], size_t curr_high) {
-    NodePtr node = new KDNode<T, DIM, S>(bbox_ptr);
+typename KDTreeBase<T, DIM, S>::NodePtr
+KDTreeBase<T, DIM, S>::divideTree(ssize_t left, ssize_t right,
+                                  const std::array<_Interval, DIM> &bboxs,
+                                  size_t curr_high) {
+    NodePtr node = new KDNode<T, DIM, S>(bboxs);
 
     ssize_t count = right - left;
     if (this->leftNode(curr_high, count)) {
@@ -103,18 +104,18 @@ typename KDTreeBase<T, DIM, S>::NodePtr KDTreeBase<T, DIM, S>::divideTree(
         this->addNode(node);
         return node;
     } else {
-        size_t split_dim = this->findSplitDim(bbox_ptr);
+        size_t split_dim = this->findSplitDim(bboxs);
         T split_val = this->qSelectMedian(split_dim, left, right);
 
         size_t split_delta = planeSplit(left, right, split_dim, split_val);
 
-        _Interval bbox_cur[DIM];
-        computeBoundingBox(left, left + split_delta, bbox_cur);
+        std::array<_Interval, DIM> bbox_cur =
+            this->computeBoundingBox(left, left + split_delta);
         node->left =
-            divideTree(left, left + split_delta, bbox_cur, curr_high + 1);
-        computeBoundingBox(left + split_delta, right, bbox_cur);
-        node->right =
-            divideTree(left + split_delta, right, bbox_cur, curr_high + 1);
+            this->divideTree(left, left + split_delta, bbox_cur, curr_high + 1);
+        bbox_cur = this->computeBoundingBox(left + split_delta, right);
+        node->right = this->divideTree(left + split_delta, right, bbox_cur,
+                                       curr_high + 1);
         return node;
     }
 }
@@ -149,21 +150,23 @@ size_t KDTreeBase<T, DIM, S>::planeSplit(ssize_t left, ssize_t right,
 
 template <typename T, size_t DIM, typename S>
 T KDTreeBase<T, DIM, S>::qSelectMedian(size_t dim, size_t left, size_t right) {
-    T sum = 0;
-    for (size_t i = left; i < right; i++)
-        sum += this->points_[i].pos[dim];
+    T sum = std::accumulate(this->points_ + left, this->points_ + right, 0.0,
+                            [dim](const T &acc, const _Point &point) {
+                                return acc + point.pos[dim];
+                            });
     return sum / (right - left);
 }
 
 template <typename T, size_t DIM, typename S>
-size_t KDTreeBase<T, DIM, S>::findSplitDim(const _Interval (&bbox_ptr)[DIM]) {
+size_t
+KDTreeBase<T, DIM, S>::findSplitDim(const std::array<_Interval, DIM> &bboxs) {
     T min_, max_;
     T span = 0;
     size_t best_dim = 0;
 
     for (size_t cur_dim = 0; cur_dim < DIM; cur_dim++) {
-        min_ = bbox_ptr[cur_dim].low;
-        max_ = bbox_ptr[cur_dim].high;
+        min_ = bboxs[cur_dim].low;
+        max_ = bboxs[cur_dim].high;
         T cur_span = (max_ - min_);
 
         if (cur_span > span) {
@@ -176,9 +179,8 @@ size_t KDTreeBase<T, DIM, S>::findSplitDim(const _Interval (&bbox_ptr)[DIM]) {
 }
 
 template <typename T, size_t DIM, typename S>
-inline void
-KDTreeBase<T, DIM, S>::computeBoundingBox(size_t left, size_t right,
-                                          _Interval (&bbox_ptr)[DIM]) {
+inline std::array<Interval<T>, DIM>
+KDTreeBase<T, DIM, S>::computeBoundingBox(size_t left, size_t right) {
     T min_vals[DIM];
     T max_vals[DIM];
     std::fill(min_vals, min_vals + DIM, std::numeric_limits<T>::max());
@@ -194,10 +196,14 @@ KDTreeBase<T, DIM, S>::computeBoundingBox(size_t left, size_t right,
         }
     }
 
+    std::array<_Interval, DIM> bboxs;
+
     for (size_t cur_dim = 0; cur_dim < DIM; cur_dim++) {
-        bbox_ptr[cur_dim].low = min_vals[cur_dim];
-        bbox_ptr[cur_dim].high = max_vals[cur_dim];
+        bboxs[cur_dim].low = min_vals[cur_dim];
+        bboxs[cur_dim].high = max_vals[cur_dim];
     }
+
+    return bboxs;
 }
 
 template <typename T, size_t DIM, typename S>
