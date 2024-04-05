@@ -85,7 +85,19 @@ kdline_fps_samples_idx = fpsample.bucket_fps_kdline_sampling(pc, 1024, h=3)
 * `KDTree-based FPS`: A farthest point sampling algorithm based on KDTree. About 40~50x faster than vanilla FPS.
 * `Bucket-based FPS` or `QuickFPS`: A bucket-based farthest point sampling algorithm. About 80~100x faster than vanilla FPS. Require an additional hyperparameter for the height of the KDTree. In practice, `h=3` or `h=5` is recommended for small data, `h=7` is recommended for medium data, and `h=9` for extremely large data.
 
-**NOTE**: In most cases, `Bucket-based FPS` is the best choice, with proper hyperparameter setting.
+> **NOTE**: In most cases, `Bucket-based FPS` is the best choice, with proper hyperparameter setting.
+
+### Determinism
+
+For deterministic results, fix the first sampled point index by passing the `start_idx` parameter.
+```python
+kdline_fps_samples_idx = fpsample.bucket_fps_kdline_sampling(pc, 1024, h=3, start_idx=0)
+```
+
+**OR** set the random seed before calling the function.
+```python
+np.random.seed(42)
+```
 
 ## Performance
 Setup:
