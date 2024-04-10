@@ -112,7 +112,6 @@ def bucket_fps_kdtree_sampling(
     Args:
         pc (np.ndarray): The input point cloud of shape (n_pts, D).
         n_samples (int): Number of samples.
-        k (int, default=None): Windows size of local heuristic search. If set to None, it will be set to `n_pts / n_samples * 16`.
         start_idx (int, default=None): The starting index of sampling. If set to None, it will be randomly picked.
     Returns:
         np.ndarray: The selected indices of shape (n_samples,).
@@ -141,7 +140,7 @@ def bucket_fps_kdline_sampling(
         n_samples (int): Number of samples.
         h (int, default=None): Height of KDTree. The bucket size is `2**h`.
             According to the paper, for small workload, h=3 is enough;
-            for medium workload, h=7 is enough; for large workload, h=9 is enough.
+            for medium workload, h=5 or 7 is enough; for large workload, h=9 is enough.
         start_idx (int, default=None): The starting index of sampling. If set to None, it will be randomly picked.
 
     Returns:
