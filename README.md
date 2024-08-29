@@ -8,7 +8,7 @@ Python efficient farthest point sampling (FPS) library, 100x faster than `numpy`
 
 `fpsample` is coupled with `numpy` and built upon Rust pyo3 bindings. This library aims at achieving the best performance for FPS in single-threaded CPU environment.
 
-*Library for GPU is under construction*. Any issues are welcome.
+🎉 PyTorch version with native multithreading, batch ops, Autograd and CUDA supports is in [pytorch_fpsample](https://github.com/leonardodalinky/pytorch_fpsample). 🎉
 
 ## Installation
 
