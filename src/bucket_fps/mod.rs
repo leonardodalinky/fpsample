@@ -7,12 +7,12 @@ pub fn bucket_fps_kdtree_sampling(
     start_idx: usize,
 ) -> Array1<usize> {
     let[p, c] = points.shape() else {panic !("points must be a 2D array")};
-    let raw_data = points.as_standard_layout().as_ptr();
+    let raw_data = points.as_standard_layout();
     let mut sampled_point_indices = vec![0; n_samples];
     let ret_code;
     unsafe {
         ret_code = ffi::bucket_fps_kdtree(
-            raw_data,
+            raw_data.as_ptr(),
             *p,
             *c,
             n_samples,
@@ -33,12 +33,12 @@ pub fn bucket_fps_kdline_sampling(
     start_idx: usize,
 ) -> Array1<usize> {
     let[p, c] = points.shape() else {panic !("points must be a 2D array")};
-    let raw_data = points.as_standard_layout().as_ptr();
+    let raw_data = points.as_standard_layout();
     let mut sampled_point_indices = vec![0; n_samples];
     let ret_code;
     unsafe {
         ret_code = ffi::bucket_fps_kdline(
-            raw_data,
+            raw_data.as_ptr(),
             *p,
             *c,
             n_samples,

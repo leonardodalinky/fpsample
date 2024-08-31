@@ -30,9 +30,8 @@ def fps_sampling(pc: np.ndarray, n_samples: int, start_idx: Optional[int] = None
     assert (
         start_idx is None or 0 <= start_idx < n_pts
     ), "start_idx should be None or 0 <= start_idx < n_pts"
-    pc = pc.astype(np.float32)
     # best performance with fortran array
-    pc = np.asfortranarray(pc)
+    pc = np.asfortranarray(pc, dtype=np.float32)
     # Random pick a start
     start_idx = np.random.randint(low=0, high=n_pts) if start_idx is None else start_idx
     return _fps_sampling(pc, n_samples, start_idx)
@@ -60,7 +59,7 @@ def fps_npdu_sampling(
     assert (
         start_idx is None or 0 <= start_idx < n_pts
     ), "start_idx should be None or 0 <= start_idx < n_pts"
-    pc = pc.astype(np.float32)
+    pc = np.ascontiguousarray(pc, dtype=np.float32)
     w = w or int(n_pts / n_samples * 16)
     if w >= n_pts - 1:
         warnings.warn(f"k is too large, set to {n_pts - 1}")
@@ -93,7 +92,7 @@ def fps_npdu_kdtree_sampling(
     assert (
         start_idx is None or 0 <= start_idx < n_pts
     ), "start_idx should be None or 0 <= start_idx < n_pts"
-    pc = pc.astype(np.float32)
+    pc = np.ascontiguousarray(pc, dtype=np.float32)
     w = w or int(n_pts / n_samples * 16)
     if w >= n_pts:
         warnings.warn(f"k is too large, set to {n_pts}")
@@ -123,7 +122,7 @@ def bucket_fps_kdtree_sampling(
     assert (
         start_idx is None or 0 <= start_idx < n_pts
     ), "start_idx should be None or 0 <= start_idx < n_pts"
-    pc = pc.astype(np.float32)
+    pc = np.ascontiguousarray(pc, dtype=np.float32)
     # Random pick a start
     start_idx = np.random.randint(low=0, high=n_pts) if start_idx is None else start_idx
     return _bucket_fps_kdtree_sampling(pc, n_samples, start_idx)
@@ -155,7 +154,7 @@ def bucket_fps_kdline_sampling(
     assert (
         start_idx is None or 0 <= start_idx < n_pts
     ), "start_idx should be None or 0 <= start_idx < n_pts"
-    pc = pc.astype(np.float32)
+    pc = np.ascontiguousarray(pc, dtype=np.float32)
     # Random pick a start
     start_idx = np.random.randint(low=0, high=n_pts) if start_idx is None else start_idx
     return _bucket_fps_kdline_sampling(pc, n_samples, h, start_idx)
