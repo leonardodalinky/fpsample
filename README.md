@@ -8,7 +8,7 @@ Python efficient farthest point sampling (FPS) library, 100x faster than `numpy`
 
 `fpsample` is coupled with `numpy` and built upon Rust pyo3 bindings. This library aims at achieving the best performance for FPS in single-threaded CPU environment.
 
-🎉 **PyTorch version with native multithreading, batch ops, Autograd and CUDA supports is in [pytorch_fpsample](https://github.com/leonardodalinky/pytorch_fpsample).** 🎉
+🎉 **PyTorch version with native multithreading, batch ops, Autograd and CUDA supports is in [pytorch_fpsample](https://github.com/leonardodalinky/pytorch_fpsample).**
 
 ## Installation
 
@@ -75,6 +75,7 @@ fps_npdu_kdtree_samples_idx = fpsample.fps_npdu_kdtree_sampling(pc, 1024, k=64)
 # KDTree-based FPS
 kdtree_fps_samples_idx = fpsample.bucket_fps_kdtree_sampling(pc, 1024)
 
+# NOTE: Probably the best
 # Bucket-based FPS or QuickFPS
 kdline_fps_samples_idx = fpsample.bucket_fps_kdline_sampling(pc, 1024, h=3)
 ```
@@ -85,7 +86,7 @@ kdline_fps_samples_idx = fpsample.bucket_fps_kdline_sampling(pc, 1024, h=3)
 * `KDTree-based FPS`: A farthest point sampling algorithm based on KDTree. About 40~50x faster than vanilla FPS.
 * `Bucket-based FPS` or `QuickFPS`: A bucket-based farthest point sampling algorithm. About 80~100x faster than vanilla FPS. Require an additional hyperparameter for the height of the KDTree. In practice, `h=3` or `h=5` is recommended for small data, `h=7` is recommended for medium data, and `h=9` for extremely large data.
 
-> **NOTE**: In most cases, `Bucket-based FPS` is the best choice, with proper hyperparameter setting.
+> **NOTE**: 🔥 In most cases, `Bucket-based FPS` is the best choice, with proper hyperparameter setting.
 
 ### Determinism
 
@@ -151,8 +152,8 @@ test_vanilla_fps_100k              20,131.7747 (81.28)    155.4407 (218.91)
 
 ## Reference
 The nearest-point-distance-updating (NPDU) heuristic strategy is proposed in the following paper:
-```
-@INPROCEEDINGS{9919246,
+```bibtex
+@INPROCEEDINGS{Li2022adjust,
   author={Li, Jingtao and Zhou, Jian and Xiong, Yan and Chen, Xing and Chakrabarti, Chaitali},
   booktitle={2022 IEEE Workshop on Signal Processing Systems (SiPS)},
   title={An Adjustable Farthest Point Sampling Method for Approximately-sorted Point Cloud Data},
@@ -165,7 +166,7 @@ The nearest-point-distance-updating (NPDU) heuristic strategy is proposed in the
 ```
 
 Bucket-based farthest point sampling (QuickFPS) is proposed in the following paper. The implementation is based on the author's [Repo](https://github.com/hanm2019/bucket-based_farthest-point-sampling_CPU). To port the implementation to other C++ program, check [this](https://github.com/leonardodalinky/fpsample/tree/main/src/bucket_fps/_ext) for details.
-```
+```bibtex
 @article{han2023quickfps,
   title={QuickFPS: Architecture and Algorithm Co-Design for Farthest Point Sampling in Large-Scale Point Clouds},
   author={Han, Meng and Wang, Liang and Xiao, Limin and Zhang, Hao and Zhang, Chenhao and Xu, Xiangrong and Zhu, Jianfeng},
