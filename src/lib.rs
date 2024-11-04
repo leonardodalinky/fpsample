@@ -3,19 +3,27 @@ use kdtree::KdTree;
 use numpy::{
     ndarray::s,
     ndarray::{Array1, ArrayView2, Axis, Zip},
-    PyArray1, PyReadonlyArray2, ToPyArray,
+    PyArray1, PyReadonlyArray1, PyReadonlyArray2, ToPyArray,
 };
 use pyo3::prelude::*;
+use pyo3::exceptions::PyNotImplementedError;
 
 mod bucket_fps;
 pub mod build_info {
     include!("../build_info.rs");
 }
 
+// start_idx can be a single value or an array of indices
+enum StartIndex<'py> {
+    Single(usize),
+    Array(PyReadonlyArray1<'py, usize>),
+}
+
+
 fn check_py_input(
     points: &PyReadonlyArray2<f32>,
     n_samples: usize,
-    start_idx: usize,
+    start_idx: StartIndex<'py>,
     max_dim: Option<usize>,
 ) -> PyResult<()> {
     let [p, c] = points.shape() else {
@@ -43,11 +51,34 @@ fn check_py_input(
             n_samples, p
         )));
     }
-    if start_idx >= *p {
-        return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
-            "start_idx must be less than the number of points: start_idx={}, P={}",
-            start_idx, p
-        )));
+    match start_idx {
+        StartIndex::Single(idx) => {
+            // Handle the single `usize` case here
+            if idx >= *p {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "start_idx must be less than the number of points: start_idx={}, P={}",
+                    idx, p
+                )));
+            }
+        }
+        StartIndex::Array(array) => {
+            // Handle the `PyReadonlyArray1<usize>` case here -> Proposed check:
+            let indices = array.as_slice()?;
+            if indices.len() > n_samples {
+                return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                    "The number of start indices must be less than or equal to n_samples: start_indices={}, n_samples={}",
+                    indices.len(), n_samples
+                )));
+            }
+            for &idx in indices {
+                if idx >= *p {
+                    return Err(PyErr::new::<pyo3::exceptions::PyValueError, _>(format!(
+                        "All indices in start_idx must be less than the number of points: start_idx={}, P={}",
+                        idx, p
+                    )));
+                }
+            }
+        }
     }
     Ok(())
 }
@@ -99,11 +130,20 @@ fn fps_sampling_py<'py>(
     py: Python<'py>,
     points: PyReadonlyArray2<f32>,
     n_samples: usize,
-    start_idx: usize,
+    start_idx: StartIndex<'py>,
 ) -> PyResult<&'py PyArray1<usize>> {
     check_py_input(&points, n_samples, start_idx, None)?;
     let points = points.as_array();
-    let idxs = py.allow_threads(|| fps_sampling(points, n_samples, start_idx));
+    let idxs = match start_idx {
+        StartIndex::Single(idx) => {
+            // Use `idx` as the starting index
+            py.allow_threads(|| fps_sampling(points, n_samples, idx))
+        }
+        StartIndex::Array(array) => {
+            // Use the array of indices as the starting indices -> TODO
+            return Err(PyNotImplementedError::new_err("Handling array of start indices is not implemented yet"));
+        }
+    };
     let ret = idxs.to_pyarray(py);
     Ok(ret)
 }
@@ -186,11 +226,20 @@ fn fps_npdu_sampling_py<'py>(
     points: PyReadonlyArray2<f32>,
     n_samples: usize,
     k: usize,
-    start_idx: usize,
+    start_idx: StartIndex<'py>,
 ) -> PyResult<&'py PyArray1<usize>> {
     check_py_input(&points, n_samples, start_idx, None)?;
     let points = points.as_array();
-    let idxs = py.allow_threads(|| fps_npdu_sampling(points, n_samples, k, start_idx));
+    let idxs = match start_idx {
+        StartIndex::Single(idx) => {
+            // Use `idx` as the starting index
+            py.allow_threads(|| fps_npdu_sampling(points, n_samples, k, idx));
+        }
+        StartIndex::Array(array) => {
+            // Use the array of indices as the starting indices -> TODO
+            return Err(PyNotImplementedError::new_err("Handling array of start indices is not implemented yet"));
+        }
+    };
     let ret = idxs.to_pyarray(py);
     Ok(ret)
 }
@@ -267,11 +316,20 @@ fn fps_npdu_kdtree_sampling_py<'py>(
     points: PyReadonlyArray2<f32>,
     n_samples: usize,
     k: usize,
-    start_idx: usize,
+    start_idx: StartIndex<'py>,
 ) -> PyResult<&'py PyArray1<usize>> {
     check_py_input(&points, n_samples, start_idx, None)?;
     let points = points.as_array();
-    let idxs = py.allow_threads(|| fps_npdu_kdtree_sampling(points, n_samples, k, start_idx));
+    let idxs = match start_idx {
+        StartIndex::Single(idx) => {
+            // Use `idx` as the starting index
+            py.allow_threads(|| fps_npdu_kdtree_sampling(points, n_samples, k, idx));
+        }
+        StartIndex::Array(array) => {
+            // Use the array of indices as the starting indices -> TODO
+            return Err(PyNotImplementedError::new_err("Handling array of start indices is not implemented yet"));
+        }
+    };
     let ret = idxs.to_pyarray(py);
     Ok(ret)
 }
@@ -287,7 +345,7 @@ fn bucket_fps_kdtree_sampling<'py>(
     py: Python<'py>,
     points: PyReadonlyArray2<f32>,
     n_samples: usize,
-    start_idx: usize,
+    start_idx: StartIndex<'py>,
 ) -> PyResult<&'py PyArray1<usize>> {
     check_py_input(
         &points,
@@ -296,8 +354,16 @@ fn bucket_fps_kdtree_sampling<'py>(
         Some(build_info::BUCKET_FPS_MAX_DIM),
     )?;
     let points = points.as_array();
-    let idxs =
-        py.allow_threads(|| bucket_fps::bucket_fps_kdtree_sampling(points, n_samples, start_idx));
+    let idxs = match start_idx {
+        StartIndex::Single(idx) => {
+            // Use `idx` as the starting index
+            py.allow_threads(|| bucket_fps::bucket_fps_kdtree_sampling(points, n_samples, idx));
+        }
+        StartIndex::Array(array) => {
+            // Use the array of indices as the starting indices -> TODO
+            return Err(PyNotImplementedError::new_err("Handling array of start indices is not implemented yet"));
+        }
+    };
     let ret = idxs.to_pyarray(py);
     Ok(ret)
 }
@@ -318,9 +384,18 @@ fn bucket_fps_kdline_sampling<'py>(
         Some(build_info::BUCKET_FPS_MAX_DIM),
     )?;
     let points = points.as_array();
-    let idxs = py.allow_threads(|| {
-        bucket_fps::bucket_fps_kdline_sampling(points, n_samples, height, start_idx)
-    });
+    let idxs = match start_idx {
+        StartIndex::Single(idx) => {
+            // Use `idx` as the starting index
+            py.allow_threads(|| {
+                bucket_fps::bucket_fps_kdline_sampling(points, n_samples, height, idx)
+            });
+        }
+        StartIndex::Array(array) => {
+            // Use the array of indices as the starting indices -> TODO
+            return Err(PyNotImplementedError::new_err("Handling array of start indices is not implemented yet"));
+        }
+    };
     let ret = idxs.to_pyarray(py);
     Ok(ret)
 }
