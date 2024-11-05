@@ -28,11 +28,14 @@ def fps_sampling(pc: np.ndarray, n_samples: int, start_idx: Optional[Union[int, 
     assert pc.ndim == 2
     n_pts, _ = pc.shape
     assert n_pts >= n_samples, "n_pts should be >= n_samples"
-    assert (
-            start_idx is None or 0 <= start_idx < n_pts
-    ), "start_idx should be None or 0 <= start_idx < n_pts"
+    if isinstance(start_idx, int):
+        assert (
+                start_idx is None or 0 <= start_idx < n_pts
+        ), "start_idx should be None or 0 <= start_idx < n_pts"
     if isinstance(start_idx, list):
         assert len(start_idx) <= n_samples, "len(start_idx) should be <= n_samples"
+        for idx in start_idx:
+            assert 0 <= idx < n_pts, "start_idx should be None or 0 <= start_idx < n_pts"
     # best performance with fortran array
     pc = np.asfortranarray(pc, dtype=np.float32)
     # Random pick a start if not given
