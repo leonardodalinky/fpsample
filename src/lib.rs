@@ -2,7 +2,7 @@ use kdtree::distance::squared_euclidean;
 use kdtree::KdTree;
 use numpy::{
     ndarray::s,
-    ndarray::{Array1, ArrayView2, Axis, Zip},
+    ndarray::{Array1, ArrayView1, ArrayView2, Axis, Zip},
     PyArray1, PyReadonlyArray1, PyReadonlyArray2, ToPyArray,
 };
 use pyo3::prelude::*;
@@ -125,6 +125,57 @@ fn fps_sampling(points: ArrayView2<f32>, n_samples: usize, start_idx: usize) -> 
     selected_pts_idx.into()
 }
 
+fn fps_sampling_multi_start_index(points: ArrayView2<f32>, n_samples: usize, start_idx: ArrayView1<usize>) -> Array1<usize> {
+    let [p, _c] = points.shape() else {
+        panic!("points must be a 2D array")
+    };
+    // previous round selected point index
+    let mut res_selected_idx: Option<usize> = None;
+    // distance from each point to the selected point set
+    let mut dist_pts_to_selected_min = Array1::<f32>::from_elem((*p,), f32::INFINITY);
+    // selected points index
+    let mut selected_pts_idx = Vec::<usize>::with_capacity(n_samples);
+    let mut start_idx_counter: usize = 0;
+
+    while selected_pts_idx.len() < n_samples {
+        if let Some(prev_idx) = res_selected_idx {
+            // update distance
+            let dist = &points - &points.slice(s![prev_idx, ..]);
+            let dist = dist.mapv(|x| x.powi(2)).sum_axis(Axis(1));
+            // update min distance
+            Zip::from(&mut dist_pts_to_selected_min)
+                .and(&dist)
+                .for_each(|x, &y| {
+                    if *x > y {
+                        *x = y;
+                    }
+                });
+            if start_idx_counter < start_idx.len(){
+                // take the next start index instead of a sampled point
+                selected_pts_idx.push(start_idx[start_idx_counter]);
+                res_selected_idx = Some(start_idx[start_idx_counter]);
+                start_idx_counter += 1;
+            } else {
+                // select the point with max distance
+                let max_idx = dist_pts_to_selected_min
+                    .indexed_iter()
+                    .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                    .unwrap()
+                    .0;
+                selected_pts_idx.push(max_idx);
+                res_selected_idx = Some(max_idx);
+            }
+        } else {
+            // first point
+            selected_pts_idx.push(start_idx[start_idx_counter]);
+            res_selected_idx = Some(start_idx[start_idx_counter]);
+            start_idx_counter += 1;
+        }
+    }
+    selected_pts_idx.into()
+}
+
+
 #[pyfunction]
 #[pyo3(name = "_fps_sampling")]
 fn fps_sampling_py<'py>(
@@ -141,8 +192,8 @@ fn fps_sampling_py<'py>(
             py.allow_threads(|| fps_sampling(points, n_samples, idx))
         }
         StartIndex::Array(array) => {
-            // Use the array of indices as the starting indices -> TODO
-            return Err(PyNotImplementedError::new_err("Handling array of start indices is not implemented yet"));
+            // Use the array of indices as the starting indices
+            fps_sampling_multi_start_index(points, n_samples, array.as_array())
         }
     };
     let ret = idxs.to_pyarray(py);

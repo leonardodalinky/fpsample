@@ -32,6 +32,12 @@ def test_vanilla_fps_4k(benchmark):
     pc = create_sample_data(n_points, n_dim)
     benchmark(fpsample.fps_sampling, pc, n_samples)
 
+@pytest.mark.benchmark(**TEST_BENCHMARK_SETTINGS["4k"])
+def test_vanilla_fps_4k(benchmark):
+    n_points, n_samples, n_dim = TEST_CASE_SETTINGS["4k"]
+    pc = create_sample_data(n_points, n_dim)
+    benchmark(fpsample.fps_sampling, pc, n_samples, start_idx=[0, 23, 64, 128])
+
 
 @pytest.mark.benchmark(**TEST_BENCHMARK_SETTINGS["4k"])
 def test_fps_npdu_4k(benchmark):
