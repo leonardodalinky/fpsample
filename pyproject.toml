@@ -1,5 +1,5 @@
 [build-system]
-requires = ["scikit-build-core>=0.11", "pybind11>=3.0"]
+requires = ["scikit-build-core>=0.11", "pybind11>=2.6"]
 build-backend = "scikit_build_core.build"
 
 [project]
@@ -12,15 +12,15 @@ authors = [
 description = "An efficient CPU implementation of farthest point sampling (FPS) for point clouds."
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.9"
+requires-python = ">=3.8"
 classifiers = [
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
     "Programming Language :: Python :: 3 :: Only",
 ]
 dependencies = [
-    "numpy>=2.0.2",
-    "pybind11>=3.0.1",
+    "numpy>=1.16.0",
+    "pybind11>=2.6",
 ]
 
 [project.urls]
@@ -29,7 +29,11 @@ Tracker = "https://github.com/leonardodalinky/fpsample/issues"
 
 [dependency-groups]
 test = ["pytest"]
-dev = [{ include-group = "test" }]
+dev = [
+    { include-group = "test" },
+    "jupyterlab>=4.3.8",
+    "pytest-benchmark>=4.0.0",
+]
 
 
 [tool.scikit-build]

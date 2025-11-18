@@ -77,3 +77,6 @@ tmp*
 
 # tmp benchmark
 .benchmarks/
+
+# uv
+uv.lock

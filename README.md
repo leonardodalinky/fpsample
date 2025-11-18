@@ -14,7 +14,7 @@ Python efficient farthest point sampling (FPS) library, 100x faster than `numpy`
 
 ### Install from PyPI
 
-`numpy>=2.0.2` is required. Install `fpsample` using pip:
+`numpy>=1.16.0` is required. Install `fpsample` using pip:
 
 ```shell
 pip install -U fpsample
@@ -91,6 +91,13 @@ kdline_fps_samples_idx = fpsample.bucket_fps_kdline_sampling(pc, 1024, h=3, star
 np.random.seed(42)
 ```
 
+## Development
+
+Install dependencies:
+```shell
+uv sync
+```
+
 ## Performance
 Setup:
   - CPU: Intel(R) Xeon(R) Gold 6326 CPU @ 2.90GHz
@@ -99,7 +106,7 @@ Setup:
 
 Run benchmark:
 ```shell
-pytest bench/ --benchmark-columns=mean,stddev --benchmark-sort=mean
+py.test bench/ --benchmark-columns=mean,stddev --benchmark-sort=mean
 ```
 
 Results:
