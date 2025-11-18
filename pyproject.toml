@@ -4,7 +4,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "fpsample"
-version = "1.0.0alpha"
+version = "1.0.0"
 authors = [
     { name = "Leonard Lin", email = "leonard.keilin@gmail.com" },
     { name = "guch8017", email = "guch8017@gmail.com" }
