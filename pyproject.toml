@@ -1,32 +1,36 @@
 [build-system]
-requires = ["maturin>=1.2,<2.0", "patchelf>=0.17"]
-build-backend = "maturin"
+requires = ["scikit-build-core>=0.11", "pybind11>=3.0"]
+build-backend = "scikit_build_core.build"
 
 [project]
 name = "fpsample"
-version = "0.3.3"
-authors = [{ name = "Leonard Lin", email = "leonard.keilin@gmail.com" }]
-keyword = [
-    "sampling",
-    "farthest point sampling",
-    "furthest point sampling",
-    "point cloud",
+version = "1.0.0alpha"
+authors = [
+    { name = "Leonard Lin", email = "leonard.keilin@gmail.com" },
+    { name = "guch8017", email = "guch8017@gmail.com" }
 ]
 description = "An efficient CPU implementation of farthest point sampling (FPS) for point clouds."
 readme = "README.md"
 license = { file = "LICENSE" }
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 classifiers = [
-    "Programming Language :: Rust",
     "Programming Language :: Python :: Implementation :: CPython",
     "Programming Language :: Python :: Implementation :: PyPy",
+    "Programming Language :: Python :: 3 :: Only",
 ]
-dependencies = ["numpy>=1.16.0"]
+dependencies = [
+    "numpy>=2.0.2",
+    "pybind11>=3.0.1",
+]
 
 [project.urls]
 Repository = "https://github.com/leonardodalinky/fpsample"
 Tracker = "https://github.com/leonardodalinky/fpsample/issues"
 
-[tool.maturin]
-python-source = "python"
-features = ["pyo3/extension-module"]
+[dependency-groups]
+test = ["pytest"]
+dev = [{ include-group = "test" }]
+
+
+[tool.scikit-build]
+minimum-version = "build-system.requires"

@@ -1,9 +1,13 @@
+from __future__ import annotations
+
 import warnings
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 import numpy as np
 
-from .fpsample import (
+from ._fpsample import (
+    __doc__,
+    __version__,
     _bucket_fps_kdline_sampling,
     _bucket_fps_kdtree_sampling,
     _fps_npdu_kdtree_sampling,
@@ -12,7 +16,25 @@ from .fpsample import (
 )
 
 
-def fps_sampling(pc: np.ndarray, n_samples: int, start_idx: Optional[Union[int, List[int]]] = None) -> np.ndarray:
+def get_start_idx(n_pts: int, start_idx: Optional[Union[int, List[int]]]) -> Union[int, np.ndarray]:
+    # Random pick a start or use the given start indices
+    if start_idx is None:
+        start_idx = np.random.randint(low=0, high=n_pts)
+    elif isinstance(start_idx, int):
+        # just use the int start_idx
+        start_idx = start_idx
+    elif isinstance(start_idx, list):
+        # convert to numpy array for rust
+        # TODO: maybe better performance with fortran array?
+        start_idx = np.array(start_idx, dtype=np.uint64)
+    else:
+        raise ValueError("start_idx should be None, int or list")
+    return start_idx
+
+
+def fps_sampling(
+    pc: np.ndarray, n_samples: int, start_idx: Optional[Union[int, List[int]]] = None
+) -> np.ndarray:
     """
     Vanilla FPS sampling.
 
@@ -30,7 +52,7 @@ def fps_sampling(pc: np.ndarray, n_samples: int, start_idx: Optional[Union[int, 
     assert n_pts >= n_samples, "n_pts should be >= n_samples"
     if isinstance(start_idx, int):
         assert (
-                start_idx is None or 0 <= start_idx < n_pts
+            start_idx is None or 0 <= start_idx < n_pts
         ), "start_idx should be None or 0 <= start_idx < n_pts"
     if isinstance(start_idx, list):
         assert len(start_idx) <= n_samples, "len(start_idx) should be <= n_samples"
@@ -44,7 +66,10 @@ def fps_sampling(pc: np.ndarray, n_samples: int, start_idx: Optional[Union[int, 
 
 
 def fps_npdu_sampling(
-        pc: np.ndarray, n_samples: int, w: Optional[int] = None, start_idx: Optional[Union[int, List[int]]] = None
+    pc: np.ndarray,
+    n_samples: int,
+    w: Optional[int] = None,
+    start_idx: Optional[Union[int, List[int]]] = None,
 ) -> np.ndarray:
     """
     FPS sampling with nearest-point-distance-updating (NPDU) heuristic strategy.
@@ -64,7 +89,7 @@ def fps_npdu_sampling(
     n_pts, _ = pc.shape
     assert n_pts >= n_samples, "n_pts should be >= n_samples"
     assert (
-            start_idx is None or 0 <= start_idx < n_pts
+        start_idx is None or 0 <= start_idx < n_pts
     ), "start_idx should be None or 0 <= start_idx < n_pts"
     if isinstance(start_idx, list):
         assert len(start_idx) <= n_samples, "len(start_idx) should be <= n_samples"
@@ -79,7 +104,10 @@ def fps_npdu_sampling(
 
 
 def fps_npdu_kdtree_sampling(
-        pc: np.ndarray, n_samples: int, w: Optional[int] = None, start_idx: Optional[Union[int, List[int]]] = None
+    pc: np.ndarray,
+    n_samples: int,
+    w: Optional[int] = None,
+    start_idx: Optional[Union[int, List[int]]] = None,
 ) -> np.ndarray:
     """
     FPS sampling with nearest-point-distance-updating (NPDU) heuristic strategy.
@@ -100,7 +128,7 @@ def fps_npdu_kdtree_sampling(
     n_pts, _ = pc.shape
     assert n_pts >= n_samples, "n_pts should be >= n_samples"
     assert (
-            start_idx is None or 0 <= start_idx < n_pts
+        start_idx is None or 0 <= start_idx < n_pts
     ), "start_idx should be None or 0 <= start_idx < n_pts"
     if isinstance(start_idx, list):
         assert len(start_idx) <= n_samples, "len(start_idx) should be <= n_samples"
@@ -115,7 +143,7 @@ def fps_npdu_kdtree_sampling(
 
 
 def bucket_fps_kdtree_sampling(
-        pc: np.ndarray, n_samples: int, start_idx: Optional[Union[int, List[int]]] = None
+    pc: np.ndarray, n_samples: int, start_idx: Optional[Union[int, List[int]]] = None
 ) -> np.ndarray:
     """
     Bucket-based FPS sampling using KDTree. Also called "QuickFPS" in the paper.
@@ -133,7 +161,7 @@ def bucket_fps_kdtree_sampling(
     n_pts, _ = pc.shape
     assert n_pts >= n_samples, "n_pts should be >= n_samples"
     assert (
-            start_idx is None or 0 <= start_idx < n_pts
+        start_idx is None or 0 <= start_idx < n_pts
     ), "start_idx should be None or 0 <= start_idx < n_pts"
     if isinstance(start_idx, list):
         assert len(start_idx) <= n_samples, "len(start_idx) should be <= n_samples"
@@ -144,7 +172,7 @@ def bucket_fps_kdtree_sampling(
 
 
 def bucket_fps_kdline_sampling(
-        pc: np.ndarray, n_samples: int, h: int, start_idx: Optional[Union[int, List[int]]] = None
+    pc: np.ndarray, n_samples: int, h: int, start_idx: Optional[Union[int, List[int]]] = None
 ) -> np.ndarray:
     """
     Bucket-based FPS sampling using KDTree, with multiple points in each bucket. Also called "QuickFPS" in the paper.
@@ -166,9 +194,9 @@ def bucket_fps_kdline_sampling(
     n_pts, _ = pc.shape
     assert n_pts >= n_samples, "n_pts should be >= n_samples"
     assert h >= 1, "h should be >= 1"
-    assert 2 ** h <= n_pts, "2**h should be <= n_pts"
+    assert 2**h <= n_pts, "2**h should be <= n_pts"
     assert (
-            start_idx is None or 0 <= start_idx < n_pts
+        start_idx is None or 0 <= start_idx < n_pts
     ), "start_idx should be None or 0 <= start_idx < n_pts"
     if isinstance(start_idx, list):
         assert len(start_idx) <= n_samples, "len(start_idx) should be <= n_samples"
@@ -178,17 +206,12 @@ def bucket_fps_kdline_sampling(
     return _bucket_fps_kdline_sampling(pc, n_samples, h, start_idx)
 
 
-def get_start_idx(n_pts: int, start_idx: Optional[Union[int, List[int]]]) -> Union[int, np.ndarray]:
-    # Random pick a start or use the given start indices
-    if start_idx is None:
-        start_idx = np.random.randint(low=0, high=n_pts)
-    elif isinstance(start_idx, int):
-        # just use the int start_idx
-        start_idx = start_idx
-    elif isinstance(start_idx, list):
-        # convert to numpy array for rust
-        # TODO: maybe better performance with fortran array?
-        start_idx = np.array(start_idx, dtype=np.uint64)
-    else:
-        raise ValueError("start_idx should be None, int or list")
-    return start_idx
+__all__ = [
+    "__doc__",
+    "__version__",
+    "fps_sampling",
+    "fps_npdu_sampling",
+    "fps_npdu_kdtree_sampling",
+    "bucket_fps_kdtree_sampling",
+    "bucket_fps_kdline_sampling",
+]
