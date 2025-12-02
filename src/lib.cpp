@@ -153,7 +153,7 @@ fps_sampling_multi_start_index(
                 float max_val = -1.0f;
 
                 for (ssize_t i = 0; i < P; i++) {
-                    if (dist_min[i] > max_val) {
+                    if (dist_min[i] >= max_val) {
                         max_val = dist_min[i];
                         max_idx = i;
                     }
@@ -218,7 +218,7 @@ py::array_t<size_t> fps_sampling(
             size_t max_idx = 0;
             float max_val = -1.0f;
             for (ssize_t i = 0; i < P; ++i) {
-                if (dist_min[i] > max_val) {
+                if (dist_min[i] >= max_val) {
                     max_val = dist_min[i];
                     max_idx = i;
                 }
