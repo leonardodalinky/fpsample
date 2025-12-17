@@ -3,6 +3,11 @@
 #include "nanoflann.hpp"
 #include "wrapper.hpp"
 
+#if defined(_MSC_VER)
+    #include <BaseTsd.h>
+    typedef SSIZE_T ssize_t;
+#endif
+
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
